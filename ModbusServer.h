@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Worker.h"
+
 #include <mutex>
 #include <set>
 

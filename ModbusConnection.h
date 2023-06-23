@@ -2,7 +2,6 @@
 
 #include "Worker.h"
 
-#include <iostream>
 #include <netinet/in.h>
 class ModbusConnection: public Worker
 {
