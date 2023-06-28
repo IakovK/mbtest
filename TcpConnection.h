@@ -21,9 +21,11 @@ class TcpConnection: public Worker
     void readInputAll();
     void readHoldingAll();
     void readAll();
-    void startLoop();
-    void stopLoop();
-    void WriteResponse(uint8_t *data, uint32_t size);
+    void writeResponse(uint8_t *data, uint32_t size);
+    void writeResponse(uint8_t data);
+    void writeResponse(uint16_t data);
+    void writeResponse(const std::vector<uint8_t> &data);
+    void writeResponse(const std::vector<uint16_t> &data);
 public:
     TcpConnection(boost::asio::ip::tcp::socket &&socket, IBaseService *server1, IModbusService *server2);
     ~TcpConnection();

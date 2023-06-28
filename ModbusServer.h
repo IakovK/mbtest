@@ -29,4 +29,8 @@ public:
     int readInput(int arg, std::uint16_t &val) override;
     int readDiscrete(int arg, std::uint8_t &val) override;
     int readHolding(int arg, std::uint16_t &val) override;
+    int readCoilAll(std::vector<uint8_t> &val) override;
+    int readInputAll(std::vector<uint16_t> &val) override;
+    int readDiscreteAll(std::vector<uint8_t> &val) override;
+    int readHoldingAll(std::vector<uint16_t> &val) override;
 };

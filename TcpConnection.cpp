@@ -48,10 +48,6 @@ void TcpConnection::run__()
                 readHoldingAll();break;
             case READ_ALL:
                 readAll();break;
-            case START_LOOP:
-                startLoop();break;
-            case STOP_LOOP:
-                stopLoop();break;
             default:
                 break;
         }
@@ -67,7 +63,7 @@ void TcpConnection::stop__()
     cancelIO();
 }
 
-void TcpConnection::WriteResponse(uint8_t *data, uint32_t size)
+void TcpConnection::writeResponse(uint8_t *data, uint32_t size)
 {
     boost::system::error_code ec;
     uint32_t size1 = ntohl(size);
@@ -78,17 +74,53 @@ void TcpConnection::WriteResponse(uint8_t *data, uint32_t size)
     }
 }
 
+void TcpConnection::writeResponse(uint8_t data)
+{
+    writeResponse(&data, 1);
+}
+
+void TcpConnection::writeResponse(uint16_t data)
+{
+    uint16_t data1 = htons(data);
+    std::cout << "TcpConnection::writeResponse(" << data << "), data1 = " << (uint)data1 << "\n";
+    writeResponse((uint8_t*)&data1, 2);
+}
+
+void TcpConnection::writeResponse(const std::vector<uint8_t> &data)
+{
+    boost::system::error_code ec;
+    uint32_t size = ntohl(data.size());
+    boost::asio::write(socket_, boost::asio::buffer(&size, 4), ec);
+    if (data.size() != 0)
+    {
+        boost::asio::write(socket_, boost::asio::buffer(data), ec);
+    }
+}
+
+void TcpConnection::writeResponse(const std::vector<uint16_t> &data)
+{
+    boost::system::error_code ec;
+    uint32_t size = ntohl(data.size() * 2);
+    boost::asio::write(socket_, boost::asio::buffer(&size, 4), ec);
+    for (auto w:data)
+    {
+        uint16_t w1 = htons(w);
+        boost::asio::write(socket_, boost::asio::buffer(&w1, 2), ec);
+    }
+}
+
 void TcpConnection::readCoil(int arg)
 {
     uint8_t retVal{0};
     int n = server2_->readCoil(arg, retVal);
     if (n > 0)
     {
-        WriteResponse(&retVal, 1);
+        std::cout << "TcpConnection::readCoil(" << arg << ") = " << (uint)retVal << "\n";
+        writeResponse(retVal);
     }
     else
     {
-        WriteResponse(nullptr, 0);  // no response
+        writeResponse(nullptr, 0);  // no response
     }
 }
 
@@ -98,11 +130,12 @@ void TcpConnection::readDiscrete(int arg)
     int n = server2_->readDiscrete(arg, retVal);
     if (n > 0)
     {
-        WriteResponse(&retVal, 1);
+        std::cout << "TcpConnection::readDiscrete(" << arg << ") = " << (uint)retVal << "\n";
+        writeResponse(retVal);
     }
     else
     {
-        WriteResponse(nullptr, 0);  // no response
+        writeResponse(nullptr, 0);  // no response
     }
 }
 
@@ -112,12 +145,11 @@ void TcpConnection::readInput(int arg)
     int n = server2_->readInput(arg, retVal);
     if (n > 0)
     {
-        retVal = htons(retVal);
-        WriteResponse((uint8_t*)&retVal, 2);
+        writeResponse(retVal);
     }
     else
     {
-        WriteResponse(nullptr, 0);  // no response
+        writeResponse(nullptr, 0);  // no response
     }
 }
 
@@ -127,46 +159,72 @@ void TcpConnection::readHolding(int arg)
     int n = server2_->readHolding(arg, retVal);
     if (n > 0)
     {
-        retVal = htons(retVal);
-        WriteResponse((uint8_t*)&retVal, 2);
+        writeResponse(retVal);
     }
     else
     {
-        WriteResponse(nullptr, 0);  // no response
+        writeResponse(nullptr, 0);  // no response
     }
 }
 
 void TcpConnection::readCoilAll()
 {
-    std::cout << "TcpConnection::readCoilAll" << "\n";
+    std::vector<uint8_t> retVal;
+    int n = server2_->readCoilAll(retVal);
+    if (n > 0)
+    {
+        writeResponse(retVal);
+    }
+    else
+    {
+        writeResponse(nullptr, 0);  // no response
+    }
 }
 
 void TcpConnection::readDiscreteAll()
 {
-    std::cout << "TcpConnection::readDiscreteAll" << "\n";
+    std::vector<uint8_t> retVal;
+    int n = server2_->readDiscreteAll(retVal);
+    if (n > 0)
+    {
+        writeResponse(retVal);
+    }
+    else
+    {
+        writeResponse(nullptr, 0);  // no response
+    }
 }
 
 void TcpConnection::readInputAll()
 {
-    std::cout << "TcpConnection::readInputAll" << "\n";
+    std::vector<uint16_t > retVal;
+    int n = server2_->readInputAll(retVal);
+    if (n > 0)
+    {
+        writeResponse(retVal);
+    }
+    else
+    {
+        writeResponse(nullptr, 0);  // no response
+    }
 }
 
 void TcpConnection::readHoldingAll()
 {
-    std::cout << "TcpConnection::readHoldingAll" << "\n";
+    std::vector<uint16_t > retVal;
+    int n = server2_->readHoldingAll(retVal);
+    if (n > 0)
+    {
+        writeResponse(retVal);
+    }
+    else
+    {
+        writeResponse(nullptr, 0);  // no response
+    }
 }
 
 void TcpConnection::readAll()
 {
     std::cout << "TcpConnection::readAll" << "\n";
-}
-
-void TcpConnection::startLoop()
-{
-    std::cout << "TcpConnection::startLoop" << "\n";
-}
-
-void TcpConnection::stopLoop()
-{
-    std::cout << "TcpConnection::stopLoop" << "\n";
+    writeResponse(nullptr, 0);  // no response
 }

@@ -112,3 +112,46 @@ int ModbusServer::readHolding(int arg, std::uint16_t &val)
     return 1;
 }
 
+int ModbusServer::readCoilAll(std::vector<uint8_t> &val)
+{
+    val.clear();
+    std::lock_guard<std::mutex> guard(ctxMutex);
+    if (nb_bits == 0)
+        return 0;
+    val.reserve(mb_mapping_->nb_bits);
+    std::copy(mb_mapping_->tab_bits, mb_mapping_->tab_bits + mb_mapping_->nb_bits, std::back_inserter(val));
+    return 1;
+}
+
+int ModbusServer::readInputAll(std::vector<uint16_t> &val)
+{
+    val.clear();
+    std::lock_guard<std::mutex> guard(ctxMutex);
+    if (nb_input_registers == 0)
+        return 0;
+    val.reserve(mb_mapping_->nb_input_registers);
+    std::copy(mb_mapping_->tab_input_registers, mb_mapping_->tab_input_registers + mb_mapping_->nb_input_registers, std::back_inserter(val));
+    return 1;
+}
+
+int ModbusServer::readDiscreteAll(std::vector<uint8_t> &val)
+{
+    val.clear();
+    std::lock_guard<std::mutex> guard(ctxMutex);
+    if (nb_input_bits == 0)
+        return 0;
+    val.reserve(mb_mapping_->nb_input_bits);
+    std::copy(mb_mapping_->tab_input_bits, mb_mapping_->tab_input_bits + mb_mapping_->nb_input_bits, std::back_inserter(val));
+    return 1;
+}
+
+int ModbusServer::readHoldingAll(std::vector<uint16_t> &val)
+{
+    val.clear();
+    std::lock_guard<std::mutex> guard(ctxMutex);
+    if (nb_registers == 0)
+        return 0;
+    val.reserve(mb_mapping_->nb_registers);
+    std::copy(mb_mapping_->tab_registers, mb_mapping_->tab_registers + mb_mapping_->nb_registers, std::back_inserter(val));
+    return 1;
+}

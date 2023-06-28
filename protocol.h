@@ -12,5 +12,3 @@
 #define READ_INPUT_ALL      7
 #define READ_HOLDING_ALL    8
 #define READ_ALL            9
-#define START_LOOP          10
-#define STOP_LOOP           11

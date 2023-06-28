@@ -83,6 +83,32 @@ void readResponse(std::vector<uint8_t> &response)
     boost::asio::read(s, boost::asio::buffer(response), ec);
 }
 
+void decodeResponse(const std::vector<uint8_t> &response, std::vector<uint8_t> &data)
+{
+    data = response;
+}
+
+void decodeResponse(const std::vector<uint8_t> &response, uint8_t &data)
+{
+    data = response[0];
+}
+
+void decodeResponse(const std::vector<uint8_t> &response, uint16_t &data)
+{
+    uint16_t *ptr = (uint16_t *)response.data();
+    data = ntohs(ptr[0]);
+}
+
+void decodeResponse(const std::vector<uint8_t> &response, std::vector<uint16_t> &data)
+{
+    uint16_t *ptr = (uint16_t *)response.data();
+    data.resize(response.size()/2);
+    for (int j = 0; j < data.size(); j++)
+    {
+        data[j] = ntohs(ptr[j]);
+    }
+}
+
 void sendCommand(std::uint8_t cmd, std::uint16_t arg, std::vector<uint8_t> &response)
 {
     std::uint16_t n = htons(arg);
@@ -96,6 +122,14 @@ void readAllRegs()
     std::cout << "readAllRegs" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_ALL, 0, response);
+    if (response.size() > 0)
+    {
+        std::cout << "readDiscreteAll: response.size() = " << response.size() << "\n";
+    }
+    else
+    {
+        std::cout << "no values" << "\n";
+    }
 }
 
 void readDiscreteAll()
@@ -103,20 +137,58 @@ void readDiscreteAll()
     std::cout << "readDiscreteAll" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_DISCRETE_ALL, 0, response);
+    if (response.size() > 0)
+    {
+        std::cout << "readDiscreteAll: response.size() = " << response.size() << "\n";
+        std::vector<uint8_t> regs;
+        decodeResponse(response, regs);
+        for (int j = 0; j < regs.size(); j++)
+        {
+            std::cout << "value[" << j << "] = " << (uint)regs[j] << "\n";
+        }
+    }
+    else
+    {
+        std::cout << "no values" << "\n";
+    }
 }
 
 void readCoilAll()
 {
-    std::cout << "readCoilAll" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_COIL_ALL, 0, response);
+    if (response.size() > 0)
+    {
+        std::vector<uint8_t> coils;
+        decodeResponse(response, coils);
+        for (int j = 0; j < coils.size(); j++)
+        {
+            std::cout << "value[" << j << "] = " << (uint)coils[j] << "\n";
+        }
+    }
+    else
+    {
+        std::cout << "no values" << "\n";
+    }
 }
 
 void readInputAll()
 {
-    std::cout << "readInputAll" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_INPUT_ALL, 0, response);
+    if (response.size() > 0)
+    {
+        std::vector<uint16_t> inputs;
+        decodeResponse(response, inputs);
+        for (int j = 0; j < inputs.size(); j++)
+        {
+            std::cout << "value[" << j << "] = " << (uint)inputs[j] << "\n";
+        }
+    }
+    else
+    {
+        std::cout << "no values" << "\n";
+    }
 }
 
 void readHoldingAll()
@@ -124,6 +196,20 @@ void readHoldingAll()
     std::cout << "readHoldingAll" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_HOLDING_ALL, 0, response);
+    if (response.size() > 0)
+    {
+        std::cout << "readHoldingAll: response.size() = " << response.size() << "\n";
+        std::vector<uint16_t> regs;
+        decodeResponse(response, regs);
+        for (int j = 0; j < regs.size(); j++)
+        {
+            std::cout << "value[" << j << "] = " << (uint)regs[j] << "\n";
+        }
+    }
+    else
+    {
+        std::cout << "no values" << "\n";
+    }
 }
 
 void readDiscrete(int n)
@@ -132,7 +218,9 @@ void readDiscrete(int n)
     sendCommand(READ_DISCRETE, n, response);
     if (response.size() > 0)
     {
-        std::cout << "value = " << (uint)response[0] << "\n";
+        uint8_t data;
+        decodeResponse(response, data);
+        std::cout << "value = " << (uint)data << "\n";
     }
     else
     {
@@ -146,7 +234,9 @@ void readCoil(int n)
     sendCommand(READ_COIL, n, response);
     if (response.size() > 0)
     {
-        std::cout << "value = " << (uint)response[0] << "\n";
+        uint8_t data;
+        decodeResponse(response, data);
+        std::cout << "value = " << (uint)data << "\n";
     }
     else
     {
@@ -160,9 +250,9 @@ void readInput(int n)
     sendCommand(READ_INPUT, n, response);
     if (response.size() >= 2)
     {
-        uint16_t v = *(uint16_t*)response.data();
-        v = ntohs(v);
-        std::cout << "value = " << v << "\n";
+        uint16_t data;
+        decodeResponse(response, data);
+        std::cout << "value = " << data << "\n";
     }
     else
     {
@@ -176,9 +266,9 @@ void readHolding(int n)
     sendCommand(READ_HOLDING, n, response);
     if (response.size() >= 2)
     {
-        uint16_t v = *(uint16_t*)response.data();
-        v = ntohs(v);
-        std::cout << "value = " << v << "\n";
+        uint16_t data;
+        decodeResponse(response, data);
+        std::cout << "value = " << data << "\n";
     }
     else
     {
@@ -188,7 +278,6 @@ void readHolding(int n)
 
 void readAllRegsByType(const std::string &mode)
 {
-    std::cout << "readAllRegsByType(" << mode << ")" << "\n";
     if (mode == "discrete")
     {
         readDiscreteAll();
@@ -240,7 +329,7 @@ void readRegByType(const std::string &mode, int n)
 2. считать цифровой выход (номер выхода), (coil - 01) command: read coil n
 3. считать входной регистр (номер регистра), (input - 04) command: read input n
 4. считать выходной регистр (номер регистра), (holding - 03) command: read holding n
-where n is number of register. In this demo only 1...10 are supported
+where n is number of register. In this demo only 0...9 are supported
 5. считать все входа, all 1 command: read discrete all
 6. считать все выхода, all 2
 7. считать все входные регистры, all 3
@@ -283,16 +372,12 @@ void startLoop(const std::vector<std::string> &args)
 {
     std::cout << "startLoop" << "\n";
     printArgs(args);
-    std::vector<uint8_t> response;
-    sendCommand(START_LOOP, 0, response);
 }
 
 void stopLoop(const std::vector<std::string> &args)
 {
     std::cout << "stopLoop" << "\n";
     printArgs(args);
-    std::vector<uint8_t> response;
-    sendCommand(STOP_LOOP, 0, response);
 }
 
 bool processCommand(std::string command)
