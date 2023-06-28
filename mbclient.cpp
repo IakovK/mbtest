@@ -124,7 +124,7 @@ void readAllRegs()
     sendCommand(READ_ALL, 0, response);
     if (response.size() > 0)
     {
-        std::cout << "readDiscreteAll: response.size() = " << response.size() << "\n";
+        std::cout << "readAllRegs: response.size() = " << response.size() << "\n";
     }
     else
     {
@@ -134,12 +134,10 @@ void readAllRegs()
 
 void readDiscreteAll()
 {
-    std::cout << "readDiscreteAll" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_DISCRETE_ALL, 0, response);
     if (response.size() > 0)
     {
-        std::cout << "readDiscreteAll: response.size() = " << response.size() << "\n";
         std::vector<uint8_t> regs;
         decodeResponse(response, regs);
         for (int j = 0; j < regs.size(); j++)
@@ -193,12 +191,10 @@ void readInputAll()
 
 void readHoldingAll()
 {
-    std::cout << "readHoldingAll" << "\n";
     std::vector<uint8_t> response;
     sendCommand(READ_HOLDING_ALL, 0, response);
     if (response.size() > 0)
     {
-        std::cout << "readHoldingAll: response.size() = " << response.size() << "\n";
         std::vector<uint16_t> regs;
         decodeResponse(response, regs);
         for (int j = 0; j < regs.size(); j++)

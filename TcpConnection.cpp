@@ -109,6 +109,27 @@ void TcpConnection::writeResponse(const std::vector<uint16_t> &data)
     }
 }
 
+int getSize(const allRegs &data)
+{
+    return data.coils.size() + 4 + data.discrete.size() + 4 + data.inputs.size() * 2 + 4 + data.holding.size() * 2 + 4;
+}
+
+void TcpConnection::writeResponse(const allRegs &data)
+{
+    std::cout << "TcpConnection::writeResponse(const allRegs): data.coils.size() = " << data.coils.size() <<
+    ", data.discrete.size() = " << data.discrete.size()
+    << ", data.inputs.size() = " << data.inputs.size() << ", data.holding.size() = " << data.holding.size() << "\n";
+    int dataSize = getSize(data);
+    std::cout << "TcpConnection::writeResponse(const allRegs): dataSize = " << dataSize << "\n";
+    boost::system::error_code ec;
+    uint32_t size = ntohl(dataSize);
+    boost::asio::write(socket_, boost::asio::buffer(&size, 4), ec);
+    writeResponse(data.coils);
+    writeResponse(data.discrete);
+    writeResponse(data.inputs);
+    writeResponse(data.holding);
+}
+
 void TcpConnection::readCoil(int arg)
 {
     uint8_t retVal{0};
@@ -226,5 +247,14 @@ void TcpConnection::readHoldingAll()
 void TcpConnection::readAll()
 {
     std::cout << "TcpConnection::readAll" << "\n";
-    writeResponse(nullptr, 0);  // no response
+    allRegs retVal;
+    int n = server2_->readAll(retVal);
+    if (n > 0)
+    {
+        writeResponse(retVal);
+    }
+    else
+    {
+        writeResponse(nullptr, 0);  // no response
+    }
 }

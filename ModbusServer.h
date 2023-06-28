@@ -33,4 +33,5 @@ public:
     int readInputAll(std::vector<uint16_t> &val) override;
     int readDiscreteAll(std::vector<uint8_t> &val) override;
     int readHoldingAll(std::vector<uint16_t> &val) override;
+    int readAll(allRegs &val) override;
 };

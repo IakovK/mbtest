@@ -10,6 +10,14 @@ public:
     virtual void deregisterConnection(class Worker *w) = 0;
 };
 
+struct allRegs
+{
+    std::vector<uint8_t> coils;//tab_bits;
+    std::vector<uint8_t> discrete;//tab_input_bits;
+    std::vector<uint16_t> inputs;//tab_input_registers;
+    std::vector<uint16_t> holding;//tab_registers;
+};
+
 class IModbusService
 {
 public:
@@ -22,6 +30,7 @@ public:
     virtual int readInputAll(std::vector<uint16_t> &val) = 0;
     virtual int readDiscreteAll(std::vector<uint8_t> &val) = 0;
     virtual int readHoldingAll(std::vector<uint16_t> &val) = 0;
+    virtual int readAll(allRegs &val) = 0;
 };
 
 class IGlobalService

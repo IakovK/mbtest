@@ -155,3 +155,15 @@ int ModbusServer::readHoldingAll(std::vector<uint16_t> &val)
     std::copy(mb_mapping_->tab_registers, mb_mapping_->tab_registers + mb_mapping_->nb_registers, std::back_inserter(val));
     return 1;
 }
+
+int ModbusServer::readAll(allRegs &val)
+{
+    int n1 = readCoilAll(val.coils);
+    int n2 = readInputAll(val.inputs);
+    int n3 = readDiscreteAll(val.discrete);
+    int n4 = readHoldingAll(val.holding);
+    if (n1 > 0 && n2 > 0 && n3 > 0 && n4 > 0)
+        return 1;
+    else
+        return 0;
+}

@@ -26,6 +26,7 @@ class TcpConnection: public Worker
     void writeResponse(uint16_t data);
     void writeResponse(const std::vector<uint8_t> &data);
     void writeResponse(const std::vector<uint16_t> &data);
+    void writeResponse(const allRegs &data);
 public:
     TcpConnection(boost::asio::ip::tcp::socket &&socket, IBaseService *server1, IModbusService *server2);
     ~TcpConnection();
