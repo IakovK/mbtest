@@ -1,13 +1,11 @@
 #pragma once
 
 #include "Worker.h"
-
-#include <mutex>
-#include <set>
+#include "BaseServer.h"
 
 #include <modbus.h>
 
-class ModbusServer: public Worker, public IModbusService
+class ModbusServer: public Worker, public BaseServer, public IModbusService
 {
     int port_;
     void run__() override;
@@ -17,17 +15,18 @@ class ModbusServer: public Worker, public IModbusService
     modbus_mapping_t *mb_mapping_{nullptr};
     std::mutex ctxMutex;
 
-    std::set<Worker*> connections_;
-    std::mutex connsetMutex;
-    IGlobalService *server_;
-
     int server_socket_{-1};
-    void StopConnections();
 
 public:
+    static const int nb_bits{10};
+    static const int nb_input_bits{10};
+    static const int nb_registers{10};
+    static const int nb_input_registers{10};
     ModbusServer(int port, IGlobalService *server);
     ~ModbusServer();
-    void registerConnection(Worker *w) override;
-    void deregisterConnection(Worker *w) override;
     int handleModbusRequest(int sock) override;
+    int readCoil(int arg, std::uint8_t &val) override;
+    int readInput(int arg, std::uint16_t &val) override;
+    int readDiscrete(int arg, std::uint8_t &val) override;
+    int readHolding(int arg, std::uint16_t &val) override;
 };

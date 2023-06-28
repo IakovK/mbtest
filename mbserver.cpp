@@ -2,6 +2,7 @@
 #include <functional>
 #include "ThreadDeleter.h"
 #include "ModbusServer.h"
+#include "TcpServer.h"
 
 std::function<void()> handler;
 void signalHandler(int signal)
@@ -18,11 +19,11 @@ int main(int ac, char *av[])
 
     ThreadDeleter td;
     ModbusServer s1(modbusPort, &td);
-    //TcpServer s2(tcpPort);
+    TcpServer s2(tcpPort, &td, &s1);
     handler = [&]
     {
         s1.stop();
-        //s2.stop();
+        s2.stop();
     };
     struct sigaction newAction{0};
     (void)sigemptyset(&newAction.sa_mask);
@@ -30,17 +31,11 @@ int main(int ac, char *av[])
     newAction.sa_handler = signalHandler;
     (void)sigaction(SIGINT, &newAction, NULL);
     s1.run();
-    //s2.run();
-    std::cout << "calling s1.wait()" << "\n";
+    s2.run();
+    td.run();
     s1.wait();
-    std::cout << "calling s1.wait() done" << "\n";
-    //s2.wait();
-    //td.stop();
-    std::cout << "calling td.wait() done" << "\n";
+    s2.wait();
+    td.stop();
     td.wait();
-    std::cout << "exiting" << "\n";
-    std::cout << "Press Enter to exit" << "\n";
-    std::string s;
-    std::getline(std::cin, s);
     return 0;
 }
