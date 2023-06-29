@@ -2,7 +2,10 @@
 #include <string>
 #include <vector>
 #include <boost/asio.hpp>
+#include <chrono>
+#include <thread>
 #include "protocol.h"
+#include "Interfaces.h"
 
 using boost::asio::ip::tcp;
 
@@ -115,21 +118,6 @@ void sendCommand(std::uint8_t cmd, std::uint16_t arg, std::vector<uint8_t> &resp
     boost::asio::write(s, boost::asio::buffer(&cmd, 1));
     boost::asio::write(s, boost::asio::buffer(&n, 2));
     readResponse(response);
-}
-
-void readAllRegs()
-{
-    std::cout << "readAllRegs" << "\n";
-    std::vector<uint8_t> response;
-    sendCommand(READ_ALL, 0, response);
-    if (response.size() > 0)
-    {
-        std::cout << "readAllRegs: response.size() = " << response.size() << "\n";
-    }
-    else
-    {
-        std::cout << "no values" << "\n";
-    }
 }
 
 void readDiscreteAll()
@@ -334,46 +322,63 @@ where n is number of register. In this demo only 0...9 are supported
  */
 void processReadOp(const std::vector<std::string> &args)
 {
-    if (args.size() < 2)
+    if (args.size() < 3)
     {
         std::cout << "too few args" << "\n";
         return;
     }
     std::string mode = args[1];
-    if (mode == "all")
+    std::string arg = args[2];
+    if (arg == "all")
     {
-        readAllRegs();
+        readAllRegsByType(mode);
     }
     else
     {
-        if (args.size() < 3)
-        {
-            std::cout << "too few args" << "\n";
-            return;
-        }
-        std::string arg = args[2];
-        if (arg == "all")
-        {
-            readAllRegsByType(mode);
-        }
-        else
-        {
-            int n = std::stoi(arg);
-            readRegByType(mode, n);
-        }
+        int n = std::stoi(arg);
+        readRegByType(mode, n);
+    }
+}
+
+void readAll()
+{
+    std::vector<uint8_t> response;
+    sendCommand(READ_ALL, 0, response);
+    if (response.size() > 0)
+    {
+        std::cout << "readAll: response.size() = " << response.size() << "\n";
+    }
+    else
+    {
+        std::cout << "no values" << "\n";
+    }
+}
+
+using namespace std::chrono_literals;
+std::thread loopThread;
+bool running;
+void loopFunc()
+{
+    running = true;
+    while(running)
+    {
+        readAll();
+        std::this_thread::sleep_for(100ms);
     }
 }
 
 void startLoop(const std::vector<std::string> &args)
 {
-    std::cout << "startLoop" << "\n";
-    printArgs(args);
+    loopThread = std::thread(loopFunc);
 }
 
 void stopLoop(const std::vector<std::string> &args)
 {
-    std::cout << "stopLoop" << "\n";
-    printArgs(args);
+    running = false;
+    if (loopThread.joinable())
+    {
+        loopThread.join();
+    }
 }
 
 bool processCommand(std::string command)

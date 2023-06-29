@@ -7,6 +7,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(MODBUS REQUIRED libmodbus)
 include_directories(${MODBUS_INCLUDE_DIRS})
 
+set(CMAKE_CXX_STANDARD 14)
 set(MBSERVER_SOURCES mbserver.cpp Worker.cpp ThreadDeleter.cpp ModbusServer.cpp ModbusConnection.cpp TcpServer.cpp TcpConnection.cpp BaseServer.cpp)
 set(MBSERVER_HEADERS Worker.h ThreadDeleter.h ModbusServer.h ModbusConnection.h TcpServer.h TcpConnection.h BaseServer.h BlockingCollection.h protocol.h)
 set(MBCLIENT_SOURCES mbclient.cpp)
